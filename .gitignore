@@ -1,11 +1,3 @@
 node_modules
 auth
 .env
-
-# SENSITIVE DATA - NEVER COMMIT
-contact-map.json
-sreenithi-activity.log
-sreenithi-stats.json
-*.log
-*-stats.json
-*-activity.log
