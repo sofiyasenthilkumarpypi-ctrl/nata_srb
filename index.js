@@ -1,3 +1,4 @@
+import 'dotenv/config';
 import makeWASocket, { useMultiFileAuthState, DisconnectReason } from '@whiskeysockets/baileys';
 import pino from 'pino';
 import axios from 'axios';
@@ -19,28 +20,36 @@ async function start() {
     sock.ev.on('connection.update', async ({ connection, lastDisconnect }) => {
         if (connection === 'open') {
             console.log('✓ WhatsApp linked');
-            await sock.presenceSubscribe(TARGET_JID);
-            console.log(`✓ Monitoring ${TARGET}`);
+            console.log(`✓ Watching for typing from: ${TARGET}`);
         }
         if (connection === 'close') {
             const reason = lastDisconnect?.error?.output?.statusCode;
             console.log('Connection closed:', reason);
             if (reason !== DisconnectReason.loggedOut) {
-                console.log('Reconnecting in 5s...');
                 setTimeout(start, 5000);
             }
         }
     });
 
+    // Catch ANY typing from ANYONE and send notification
     sock.ev.on('presence.update', async ({ id, presences }) => {
-        if (id === TARGET_JID && presences[id]?.lastKnownPresence === 'composing') {
-            console.log(`[${new Date().toISOString()}] typing`);
+        const state = presences[id]?.lastKnownPresence;
+
+        if (state === 'composing') {
+            console.log(`\n🔔 TYPING DETECTED from: ${id}`);
+            console.log(`   Target we're looking for: ${TARGET_JID}`);
+            console.log(`   Match: ${id === TARGET_JID || id.includes(TARGET)}`);
+
+            // Send notification for ANY typing event (for testing)
             try {
-                await axios.post(`https://ntfy.sh/${NTFY_TOPIC}`, 'typing now', {
-                    headers: { Title: 'WA Alert', Priority: 'high' }
-                });
+                const response = await axios.post(
+                    `https://ntfy.sh/${NTFY_TOPIC}`,
+                    `Someone typing: ${id}`,
+                    { headers: { Title: 'WA Typing', Priority: 'high' } }
+                );
+                console.log(`   ✅ Notification sent: ${response.status}\n`);
             } catch (e) {
-                console.error('Notification failed:', e.message);
+                console.error(`   ❌ Notification failed: ${e.message}\n`);
             }
         }
     });
