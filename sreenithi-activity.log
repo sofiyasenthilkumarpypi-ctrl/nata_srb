@@ -1,0 +1,37 @@
+[2026-08-10T19:25:36.045Z] 🚀 WhatsApp tracker started
+[2026-08-10T19:25:36.047Z] ✓ Subscribed to Sreenithi presence
+[2026-08-10T19:25:36.056Z] 👂 Listening for "check" commands on ntfy
+[2026-08-10T19:25:36.346Z] 🔴 Sreenithi went OFFLINE
+[2026-08-10T19:28:25.819Z] 🚀 WhatsApp tracker started
+[2026-08-10T19:28:25.821Z] ✓ Subscribed to Sreenithi presence
+[2026-08-10T19:28:25.830Z] 👂 Listening for "check" commands on ntfy
+[2026-08-10T19:28:26.141Z] 🔴 Sreenithi went OFFLINE
+[2026-08-10T19:28:33.939Z] 💬 Amma ❤️ is TYPING
+[2026-08-10T19:30:01.774Z] 🚀 WhatsApp tracker started
+[2026-08-10T19:30:01.779Z] ✓ Subscribed to Sreenithi presence
+[2026-08-10T19:30:01.780Z] 👂 Starting ntfy listener for "check" commands
+[2026-08-10T19:30:02.178Z] 🔴 Sreenithi went OFFLINE
+[2026-08-10T19:30:03.203Z] 📥 Received ntfy message: "undefined"
+[2026-08-10T19:30:03.611Z] 📥 Received ntfy message: "sreenithi 🤍 went offline"
+[2026-08-10T19:30:19.967Z] 📥 Received ntfy message: "check"
+[2026-08-10T19:30:19.968Z] 🔍 "check" command detected - sending RTT probe
+[2026-08-10T19:30:21.367Z] 📥 Received ntfy message: "triggered"
+[2026-08-10T19:30:21.798Z] 🔍 RTT probe sent to Sreenithi (msg: 3EB069A6097BFA1C99986A)
+[2026-08-10T19:30:31.813Z] 🔴 Sreenithi: OFFLINE (RTT: 11844ms - TIMEOUT) - Device offline or unreachable
+[2026-08-10T19:30:33.025Z] 📥 Received ntfy message: "🔴 sreenithi: offline
+rtt: 11844ms (timeout)
+device offline or unreachable"
+[2026-08-10T19:30:48.214Z] 📥 Received ntfy message: "undefined"
+[2026-08-10T19:31:33.182Z] 📥 Received ntfy message: "undefined"
+[2026-08-10T19:49:43.114Z] 🚀 Ultimate Sreenithi Tracker started
+[2026-08-10T19:49:43.115Z] 📊 Total stats: 0 messages, 0 probes
+[2026-08-10T19:49:43.117Z] ✓ Subscribed to presence
+[2026-08-10T19:49:43.367Z] 🔴 OFFLINE
+[2026-08-10T19:49:44.566Z] 👂 Listening for commands
+[2026-08-10T19:49:54.296Z] 📥 Command: "check"
+[2026-08-10T19:49:54.298Z] 🔍 Manual check
+[2026-08-10T19:49:54.916Z] 🔍 RTT probe sent (3EB04CE67C60B779DD9904)
+[2026-08-10T19:50:04.924Z] 🔴 OFFLINE (RTT: 10624ms - TIMEOUT)
+[2026-08-10T19:50:06.073Z] 📥 Command: "🔴 offline
+rtt: 10624ms (timeout)
+device offline or unreachable"
