@@ -641,119 +641,173 @@ async function start() {
     });
 }
 
-// ntfy command listener - polling instead of SSE for Railway compatibility
+// ntfy command listener
 async function startNtfyListener(sock) {
-    log('👂 Listening for commands (polling mode)');
+    const ntfyUrl = `https://ntfy.sh/${NTFY_TOPIC}/sse`;
 
-    let lastMessageId = null;
+    log('👂 Listening for commands');
 
-    async function pollCommands() {
+    async function connectStream() {
         try {
-            const response = await axios.get(`https://ntfy.sh/${NTFY_TOPIC}/json?poll=1`, {
-                timeout: 10000
+            const response = await axios.get(ntfyUrl, {
+                responseType: 'stream',
+                timeout: 0
             });
 
-            const message = response.data?.message?.toLowerCase().trim();
-            const messageId = response.data?.id;
+            response.data.on('data', async (chunk) => {
+                const lines = chunk.toString().split('\n');
 
-            if (message && messageId !== lastMessageId) {
-                lastMessageId = messageId;
-                log(`📥 Command: "${message}"`);
+                for (const line of lines) {
+                    if (line.startsWith('data: ')) {
+                        try {
+                            const data = JSON.parse(line.substring(6));
+                            const message = data.message?.toLowerCase().trim();
 
-                if (message === 'check') {
-                    log('🔍 Manual check');
-                    await sendRttProbe(sock);
-                }
-                else if (message === 'auto') {
-                    if (autoProbeInterval) {
-                        log('⚠️ Auto-probe already running');
-                    } else {
-                        log('🔄 Starting auto-probe (every 3min)');
-                        autoProbeInterval = setInterval(() => sendRttProbe(sock), 180000);
-                        axios.post(`https://ntfy.sh/${NTFY_TOPIC}`, '🔄 Auto-probe ON (3min)',
-                            { headers: { Title: 'Auto-Probe ON' } }).catch(() => {});
+                            if (!message) continue;
+
+                            log(`📥 Command: "${message}"`);
+
+                            if (message === 'check') {
+                                log('🔍 Manual check');
+                                await sendRttProbe(sock);
+                            }
+                            else if (message === 'auto') {
+                                if (autoProbeInterval) {
+                                    log('⚠️ Auto-probe already running');
+                                } else {
+                                    log('🔄 Starting auto-probe (every 3min)');
+                                    autoProbeInterval = setInterval(() => sendRttProbe(sock), 180000);
+
+                                    axios.post(
+                                        `https://ntfy.sh/${NTFY_TOPIC}`,
+                                        '🔄 Auto-probe started\nProbing every 3 minutes\nSend "stop" to disable',
+                                        { headers: { Title: 'Auto-Probe ON', Priority: 'default' } }
+                                    ).catch(() => {});
+                                }
+                            }
+                            else if (message.startsWith('auto ')) {
+                                // Custom interval: "auto 30s", "auto 1m", "auto 5m"
+                                const intervalStr = message.split(' ')[1];
+                                let intervalMs = 180000; // default 3min
+
+                                if (intervalStr.endsWith('s')) {
+                                    intervalMs = parseInt(intervalStr) * 1000;
+                                } else if (intervalStr.endsWith('m')) {
+                                    intervalMs = parseInt(intervalStr) * 60000;
+                                }
+
+                                if (autoProbeInterval) clearInterval(autoProbeInterval);
+
+                                log(`🔄 Starting auto-probe (every ${intervalStr})`);
+                                autoProbeInterval = setInterval(() => sendRttProbe(sock), intervalMs);
+
+                                axios.post(
+                                    `https://ntfy.sh/${NTFY_TOPIC}`,
+                                    `🔄 Auto-probe started\nInterval: ${intervalStr}\nSend "stop" to disable`,
+                                    { headers: { Title: 'Auto-Probe ON', Priority: 'default' } }
+                                ).catch(() => {});
+                            }
+                            else if (message === 'continuous') {
+                                if (continuousProbeInterval) {
+                                    log('⚠️ Continuous probe already running');
+                                } else {
+                                    log('🔄 Starting CONTINUOUS probe (every 30s)');
+                                    continuousProbeInterval = setInterval(() => sendRttProbe(sock), 30000);
+
+                                    axios.post(
+                                        `https://ntfy.sh/${NTFY_TOPIC}`,
+                                        '🔄 CONTINUOUS monitoring ON\nProbing every 30 seconds\nDetects online/offline transitions\nSend "stop" to disable',
+                                        { headers: { Title: 'Continuous ON', Priority: 'high' } }
+                                    ).catch(() => {});
+                                }
+                            }
+                            else if (message.startsWith('continuous ')) {
+                                // Custom interval: "continuous 10s", "continuous 1m"
+                                const intervalStr = message.split(' ')[1];
+                                let intervalMs = 30000; // default 30s
+
+                                if (intervalStr.endsWith('s')) {
+                                    intervalMs = parseInt(intervalStr) * 1000;
+                                } else if (intervalStr.endsWith('m')) {
+                                    intervalMs = parseInt(intervalStr) * 60000;
+                                }
+
+                                if (continuousProbeInterval) clearInterval(continuousProbeInterval);
+
+                                log(`🔄 Starting CONTINUOUS probe (every ${intervalStr})`);
+                                continuousProbeInterval = setInterval(() => sendRttProbe(sock), intervalMs);
+
+                                axios.post(
+                                    `https://ntfy.sh/${NTFY_TOPIC}`,
+                                    `🔄 CONTINUOUS monitoring ON\nInterval: ${intervalStr}\nDetects online/offline\nSend "stop" to disable`,
+                                    { headers: { Title: 'Continuous ON', Priority: 'high' } }
+                                ).catch(() => {});
+                            }
+                            else if (message === 'stop') {
+                                let stopped = false;
+
+                                if (autoProbeInterval) {
+                                    clearInterval(autoProbeInterval);
+                                    autoProbeInterval = null;
+                                    stopped = true;
+                                    log('⏹️ Auto-probe stopped');
+                                }
+
+                                if (continuousProbeInterval) {
+                                    clearInterval(continuousProbeInterval);
+                                    continuousProbeInterval = null;
+                                    stopped = true;
+                                    log('⏹️ Continuous probe stopped');
+                                }
+
+                                if (stopped) {
+                                    axios.post(
+                                        `https://ntfy.sh/${NTFY_TOPIC}`,
+                                        '⏹️ All auto-probing stopped',
+                                        { headers: { Title: 'Stopped', Priority: 'default' } }
+                                    ).catch(() => {});
+                                } else {
+                                    log('⚠️ No auto-probing running');
+                                }
+                            }
+                            else if (message === 'stats' || message === 'summary') {
+                                const summary = generateDailySummary();
+                                log('📊 Sending daily summary');
+
+                                axios.post(
+                                    `https://ntfy.sh/${NTFY_TOPIC}`,
+                                    summary,
+                                    { headers: { Title: 'Daily Summary', Priority: 'default' } }
+                                ).catch(() => {});
+                            }
+                            else if (message === 'profile') {
+                                await checkProfilePicChange(sock);
+                                await checkStatusChange(sock);
+                                log('🔍 Checked profile & status');
+                            }
+
+                        } catch (e) {}
                     }
                 }
-                else if (message.startsWith('auto ')) {
-                    const intervalStr = message.split(' ')[1];
-                    let intervalMs = 180000;
+            });
 
-                    if (intervalStr.endsWith('s')) intervalMs = parseInt(intervalStr) * 1000;
-                    else if (intervalStr.endsWith('m')) intervalMs = parseInt(intervalStr) * 60000;
+            response.data.on('error', (err) => {
+                log(`❌ ntfy error: ${err.message}`);
+                setTimeout(connectStream, 5000);
+            });
 
-                    if (autoProbeInterval) clearInterval(autoProbeInterval);
+            response.data.on('end', () => {
+                log('⚠️ ntfy reconnecting...');
+                setTimeout(connectStream, 2000);
+            });
 
-                    log(`🔄 Starting auto-probe (every ${intervalStr})`);
-                    autoProbeInterval = setInterval(() => sendRttProbe(sock), intervalMs);
-                    axios.post(`https://ntfy.sh/${NTFY_TOPIC}`, `🔄 Auto-probe ON (${intervalStr})`,
-                        { headers: { Title: 'Auto-Probe ON' } }).catch(() => {});
-                }
-                else if (message === 'continuous') {
-                    if (continuousProbeInterval) {
-                        log('⚠️ Continuous already running');
-                    } else {
-                        log('🔄 Starting CONTINUOUS (30s)');
-                        continuousProbeInterval = setInterval(() => sendRttProbe(sock), 30000);
-                        axios.post(`https://ntfy.sh/${NTFY_TOPIC}`, '🔄 CONTINUOUS ON (30s)',
-                            { headers: { Title: 'Continuous ON' } }).catch(() => {});
-                    }
-                }
-                else if (message.startsWith('continuous ')) {
-                    const intervalStr = message.split(' ')[1];
-                    let intervalMs = 30000;
-
-                    if (intervalStr.endsWith('s')) intervalMs = parseInt(intervalStr) * 1000;
-                    else if (intervalStr.endsWith('m')) intervalMs = parseInt(intervalStr) * 60000;
-
-                    if (continuousProbeInterval) clearInterval(continuousProbeInterval);
-
-                    log(`🔄 Starting CONTINUOUS (${intervalStr})`);
-                    continuousProbeInterval = setInterval(() => sendRttProbe(sock), intervalMs);
-                    axios.post(`https://ntfy.sh/${NTFY_TOPIC}`, `🔄 CONTINUOUS ON (${intervalStr})`,
-                        { headers: { Title: 'Continuous ON' } }).catch(() => {});
-                }
-                else if (message === 'stop') {
-                    let stopped = false;
-
-                    if (autoProbeInterval) {
-                        clearInterval(autoProbeInterval);
-                        autoProbeInterval = null;
-                        stopped = true;
-                    }
-                    if (continuousProbeInterval) {
-                        clearInterval(continuousProbeInterval);
-                        continuousProbeInterval = null;
-                        stopped = true;
-                    }
-
-                    if (stopped) {
-                        log('⏹️ Stopped');
-                        axios.post(`https://ntfy.sh/${NTFY_TOPIC}`, '⏹️ Stopped',
-                            { headers: { Title: 'Stopped' } }).catch(() => {});
-                    } else {
-                        log('⚠️ Nothing running');
-                    }
-                }
-                else if (message === 'stats' || message === 'summary') {
-                    const summary = generateDailySummary();
-                    log('📊 Sending summary');
-                    axios.post(`https://ntfy.sh/${NTFY_TOPIC}`, summary,
-                        { headers: { Title: 'Daily Summary' } }).catch(() => {});
-                }
-                else if (message === 'profile') {
-                    await checkProfilePicChange(sock);
-                    await checkStatusChange(sock);
-                    log('🔍 Checked profile');
-                }
-            }
-        } catch (e) {
-            // Silent fail - will retry next poll
+        } catch (err) {
+            log(`❌ ntfy failed: ${err.message}`);
+            setTimeout(connectStream, 5000);
         }
-
-        setTimeout(pollCommands, 3000); // Poll every 3 seconds
     }
 
-    pollCommands();
+    connectStream();
 }
 
 start();

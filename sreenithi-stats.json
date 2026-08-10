@@ -3,20 +3,20 @@
   "messagesSent": 0,
   "typingEvents": 0,
   "onlineEvents": 0,
-  "offlineEvents": 2,
+  "offlineEvents": 1,
   "averageResponseTime": 0,
   "responseTimes": [],
   "dailyActivity": {
     "2026-08-10": {
-      "probes": 2,
+      "probes": 1,
       "activeCount": 0,
       "standbyCount": 0,
-      "offlineCount": 2,
+      "offlineCount": 1,
       "typingEvents": 0,
       "messagesReceived": 0,
       "messagesSent": 0,
       "onlineEvents": 0,
-      "offlineEvents": 2
+      "offlineEvents": 1
     }
   },
   "stateHistory": [
@@ -24,11 +24,6 @@
       "timestamp": "2026-08-10T19:50:04.923Z",
       "state": "OFFLINE",
       "rtt": 10624
-    },
-    {
-      "timestamp": "2026-08-10T20:37:30.434Z",
-      "state": "OFFLINE",
-      "rtt": 10452
     }
   ],
   "typingDurations": [],
@@ -38,8 +33,7 @@
     "active": [],
     "standby": [],
     "offline": [
-      10624,
-      10452
+      10624
     ]
   }
 }
