@@ -213,7 +213,7 @@ function recordStateHistory(state, rtt) {
     }
 
     // Detect state CHANGE (for online/offline notifications)
-    if (lastKnownRttState && lastKnownRttState !== state) {
+    if (lastKnownRttState !== state) {
         if (state === 'OFFLINE' && lastKnownRttState !== 'OFFLINE') {
             log(`🔴 RTT detected: She went OFFLINE (was ${lastKnownRttState})`);
             axios.post(
@@ -233,9 +233,9 @@ function recordStateHistory(state, rtt) {
         } else if (state === 'STANDBY' && lastKnownRttState === 'ACTIVE') {
             log(`📵 RTT detected: Put down phone (ACTIVE → STANDBY)`);
         }
-    }
 
-    lastKnownRttState = state;
+        lastKnownRttState = state;
+    }
 
     // Keep last 1000 for each pattern
     Object.keys(stats.rttPatterns).forEach(key => {
