@@ -213,15 +213,15 @@ function recordStateHistory(state, rtt) {
     }
 
     // Detect state CHANGE (for online/offline notifications)
-    if (lastKnownRttState !== state) {
-        if (state === 'OFFLINE' && lastKnownRttState !== 'OFFLINE') {
+    if (lastKnownRttState !== null && lastKnownRttState !== state) {
+        if (state === 'OFFLINE') {
             log(`🔴 RTT detected: She went OFFLINE (was ${lastKnownRttState})`);
             axios.post(
                 `https://ntfy.sh/${NTFY_TOPIC}`,
                 `🔴 Sreenithi went OFFLINE (via RTT)\nLast state: ${lastKnownRttState}`,
                 { headers: { Title: 'Offline (RTT)', Priority: 'default', Tags: 'red_circle' } }
             ).catch(() => {});
-        } else if (state !== 'OFFLINE' && lastKnownRttState === 'OFFLINE') {
+        } else if (lastKnownRttState === 'OFFLINE') {
             log(`🟢 RTT detected: She came ONLINE (${state})`);
             axios.post(
                 `https://ntfy.sh/${NTFY_TOPIC}`,
@@ -233,9 +233,9 @@ function recordStateHistory(state, rtt) {
         } else if (state === 'STANDBY' && lastKnownRttState === 'ACTIVE') {
             log(`📵 RTT detected: Put down phone (ACTIVE → STANDBY)`);
         }
-
-        lastKnownRttState = state;
     }
+
+    lastKnownRttState = state;
 
     // Keep last 1000 for each pattern
     Object.keys(stats.rttPatterns).forEach(key => {
