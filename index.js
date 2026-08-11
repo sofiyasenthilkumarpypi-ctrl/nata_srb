@@ -613,29 +613,18 @@ async function start() {
             }
         }
 
-        // Other contacts typing
-        const lidToContact = {};
-        Object.entries(contactMap).forEach(([key, contact]) => {
-            lidToContact[contact.lid] = contact.name;
-        });
-
+        // Other contacts typing - log only, no notifications
         if (presence === 'composing' && id !== SREENITHI_LID) {
-            const contactName = lidToContact[id];
+            const lidToContact = {};
+            Object.entries(contactMap).forEach(([key, contact]) => {
+                lidToContact[contact.lid] = contact.name;
+            });
 
+            const contactName = lidToContact[id];
             if (contactName) {
                 log(`💬 ${contactName} typing`);
-                axios.post(
-                    `https://ntfy.sh/${NTFY_TOPIC}`,
-                    `${contactName} is typing`,
-                    { headers: { Title: 'Typing', Priority: 'default' } }
-                ).catch(() => {});
             } else {
                 log(`💬 Someone typing (${id})`);
-                axios.post(
-                    `https://ntfy.sh/${NTFY_TOPIC}`,
-                    'Someone is typing',
-                    { headers: { Title: 'Typing', Priority: 'default' } }
-                ).catch(() => {});
             }
         }
     });
