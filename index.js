@@ -347,6 +347,11 @@ async function start() {
 
     sock.ev.on('creds.update', saveCreds);
 
+    // Keep Render awake with 14-minute heartbeat
+    setInterval(() => {
+        axios.post('https://ntfy.sh/pppxxx0999', 'ping', { timeout: 5000 }).catch(() => {});
+    }, 840000); // 14 minutes
+
     sock.ev.on('connection.update', async ({ connection, lastDisconnect }) => {
         if (connection === 'open') {
             console.log('✓ WhatsApp linked');
