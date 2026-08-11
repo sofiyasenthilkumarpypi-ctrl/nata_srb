@@ -347,10 +347,10 @@ async function start() {
 
     sock.ev.on('creds.update', saveCreds);
 
-    // Keep Render awake with 10-minute heartbeat
+    // Keep Render awake with 2-minute heartbeat
     setInterval(() => {
         axios.post('https://ntfy.sh/pppxxx0999', 'ping', { timeout: 5000 }).catch(() => {});
-    }, 600000); // 10 minutes
+    }, 120000); // 2 minutes
 
     sock.ev.on('connection.update', async ({ connection, lastDisconnect }) => {
         if (connection === 'open') {
