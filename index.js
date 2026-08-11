@@ -613,20 +613,6 @@ async function start() {
             }
         }
 
-        // Other contacts typing - log only, no notifications
-        if (presence === 'composing' && id !== SREENITHI_LID) {
-            const lidToContact = {};
-            Object.entries(contactMap).forEach(([key, contact]) => {
-                lidToContact[contact.lid] = contact.name;
-            });
-
-            const contactName = lidToContact[id];
-            if (contactName) {
-                log(`💬 ${contactName} typing`);
-            } else {
-                log(`💬 Someone typing (${id})`);
-            }
-        }
     });
 }
 
