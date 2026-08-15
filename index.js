@@ -3,6 +3,15 @@ import makeWASocket, { useMultiFileAuthState, DisconnectReason } from '@whiskeys
 import pino from 'pino';
 import axios from 'axios';
 import { readFileSync, appendFileSync, writeFileSync, existsSync } from 'fs';
+import { createServer } from 'http';
+
+// Dummy HTTP server for Render
+createServer((req, res) => {
+    res.writeHead(200, { 'Content-Type': 'text/plain' });
+    res.end('Tracker running\n');
+}).listen(process.env.PORT || 10000, () => {
+    console.log(`✓ HTTP server on :${process.env.PORT || 10000}`);
+});
 
 const NTFY_TOPIC = process.env.NTFY_TOPIC || 'wa_typing';
 const CONTACT_MAP_FILE = 'contact-map.json';
